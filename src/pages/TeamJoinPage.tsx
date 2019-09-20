@@ -51,7 +51,6 @@ const TeamJoinPage: React.FC<
 > = props => {
   const {
     token,
-
     user,
     teams,
     selfTeam,
@@ -155,7 +154,8 @@ const TeamJoinPage: React.FC<
     {
       title: "队伍成员",
       dataIndex: "membersUsername",
-      key: "membersUsername"
+      key: "membersUsername",
+      render: members => members.join("、")
     }
   ];
 
