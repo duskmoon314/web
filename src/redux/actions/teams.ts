@@ -2,6 +2,7 @@ import { createAsyncAction } from "typesafe-actions";
 import api from "../../api";
 import {
   IGetTeamsAction,
+  IGetTeamNumAction,
   IGetContestIdAction,
   IThunkResult,
   IGetSelfTeamAction
@@ -10,6 +11,9 @@ import {
   GET_TEAMS_FAILURE,
   GET_TEAMS_REQUEST,
   GET_TEAMS_SUCCESS,
+  GET_TEAM_NUM_REQUEST,
+  GET_TEAM_NUM_SUCCESS,
+  GET_TEAM_NUM_FAILURE,
   GET_SELF_TEAM_REQUEST,
   GET_SELF_TEAM_SUCCESS,
   GET_SELF_TEAM_FAILURE,
@@ -17,7 +21,7 @@ import {
   GET_CONTEST_ID_SUCCESS,
   GET_CONTEST_ID_FAILURE
 } from "../types/constants";
-import { ITeam } from "../types/state";
+import { ITeam, IUser } from "../types/state";
 
 export const getTeamsAction = createAsyncAction(
   GET_TEAMS_REQUEST,
@@ -37,7 +41,6 @@ export function getTeams(
     dispatch(getTeamsAction.request());
 
     try {
-      const token = getState().auth.token || "";
       if (!getState().teams.contestId) {
         await dispatch(getContestId(type, year));
       }
@@ -46,30 +49,69 @@ export function getTeams(
         teams = await api.getTeams(
           self,
           getState().teams.contestId!,
-          token,
           begin,
           end
         );
       } else {
-        teams = await api.getTeams(self, getState().teams.contestId!, token);
+        teams = await api.getTeams(self, getState().teams.contestId!);
       }
 
-      for (const team of teams) {
-        const leaderUsername = await api.getUsername(team.leader, token);
-        team.leaderUsername = leaderUsername;
-        team.membersUsername = [];
-        for (const id of team.members) {
-          if (id === team.leader) {
-            team.membersUsername!.push(leaderUsername);
-          } else {
-            const username = await api.getUsername(id, token);
-            team.membersUsername!.push(username);
-          }
-        }
-      }
+      const players = teams.reduce(
+        (data: number[], team) => data.concat(team.members),
+        []
+      );
+
+      const playersInfo = await api.getUserInfos(players);
+
+      const playerInfoPair: { [key: number]: IUser } = {};
+
+      playersInfo.forEach(player => {
+        playerInfoPair[player.id] = player;
+      });
+
+      teams = await Promise.all(
+        teams.map(async team => {
+          const membersInfo = team.members.map(member => {
+            return playerInfoPair[member];
+          });
+          const leaderInfo = playerInfoPair[team.leader];
+          return {
+            ...team,
+            membersInfo: membersInfo,
+            leaderInfo: leaderInfo
+          };
+        })
+      );
+
       dispatch(getTeamsAction.success(teams));
     } catch (e) {
       dispatch(getTeamsAction.failure(e));
+    }
+  };
+}
+
+export const getTeamNumAction = createAsyncAction(
+  GET_TEAM_NUM_REQUEST,
+  GET_TEAM_NUM_SUCCESS,
+  GET_TEAM_NUM_FAILURE
+)<undefined, number, Error>();
+
+export function getTeamNum(
+  type: string,
+  year: number
+): IThunkResult<IGetTeamNumAction> {
+  return async (dispatch, getState) => {
+    dispatch(getTeamNumAction.request());
+
+    try {
+      if (!getState().teams.contestId) {
+        await dispatch(getContestId(type, year));
+      }
+      const num = await api.getTeamNum(getState().teams.contestId!);
+
+      dispatch(getTeamNumAction.success(num));
+    } catch (e) {
+      dispatch(getTeamNumAction.failure(e));
     }
   };
 }
@@ -88,26 +130,17 @@ export function getSelfTeam(
     dispatch(getSelfTeamAction.request());
 
     try {
-      const token = getState().auth.token || "";
       if (!getState().teams.contestId) {
         await dispatch(getContestId(type, year));
       }
-      const team = await api.getTeams(true, getState().teams.contestId!, token);
+      const team = await api.getTeams(true, getState().teams.contestId!);
 
       if (team.length) {
-        const leaderUsername = await api.getUsername(team[0].leader, token);
-        team[0].leaderUsername = leaderUsername;
-        team[0].membersUsername = [];
-        for (const id of team[0].members) {
-          if (id === team[0].leader) {
-            team[0].membersUsername!.push(leaderUsername);
-          } else {
-            const username = await api.getUsername(id, token);
-            team[0].membersUsername!.push(username);
-          }
-        }
+        const selfTeam = team[0];
+        selfTeam.leaderInfo = await api.getUserInfo(selfTeam.leader);
+        selfTeam.membersInfo = await api.getUserInfos(selfTeam.members);
 
-        dispatch(getSelfTeamAction.success(team[0]));
+        dispatch(getSelfTeamAction.success(selfTeam));
       } else {
         const noSelfTeam: ITeam = {
           id: 0,

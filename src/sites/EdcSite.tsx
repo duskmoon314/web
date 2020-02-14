@@ -3,10 +3,10 @@ import { MenuProps } from "antd/lib/menu";
 import React, { useState, useEffect } from "react";
 import {
   Link,
-  Redirect,
   Route,
   RouteComponentProps,
-  Switch
+  Switch,
+  Redirect
 } from "react-router-dom";
 import { Site } from "../App";
 import styles from "./EdcSite.module.css";
@@ -41,12 +41,11 @@ const EdcSite: React.FC<WithRouterComponent<{}, IEdcSiteProps>> = ({
   location
 }) => {
   const [page, setPage] = useState<Page>("intro");
-  const [selected, setSelected] = useState<boolean>(false);
 
   const homeRoute = () => {
-    setSelected(true);
     return <Redirect to={"/thuedc/intro"} push />;
   };
+
   const NotFoundPage = (props: RouteComponentProps<any>) => (
     <NotFoundSite {...props} setSite={setSite} />
   );
@@ -67,10 +66,11 @@ const EdcSite: React.FC<WithRouterComponent<{}, IEdcSiteProps>> = ({
 
   return (
     <Layout>
-      <Sider breakpoint="sm" collapsedWidth="0">
+      <Sider breakpoint="sm" collapsedWidth="0" theme="light">
         <Menu
-          className={styles.menu}
+          theme="light"
           mode="inline"
+          defaultOpenKeys={["team"]}
           selectedKeys={[page]}
           onSelect={onMenuSelect}
         >
@@ -78,6 +78,11 @@ const EdcSite: React.FC<WithRouterComponent<{}, IEdcSiteProps>> = ({
             <Link to={`${match.url}/intro`} replace />
             <Icon type="home" />
             介绍
+          </Menu.Item>
+          <Menu.Item key="resource">
+            <Link to={`${match.url}/resources`} replace />
+            <Icon type="database" />
+            资源与公告
           </Menu.Item>
           <Menu.Item key="enroll">
             <Link to={`${match.url}/enroll`} replace />
@@ -102,11 +107,6 @@ const EdcSite: React.FC<WithRouterComponent<{}, IEdcSiteProps>> = ({
               管理
             </Menu.Item>
           </SubMenu>
-          <Menu.Item key="resource">
-            <Link to={`${match.url}/resources`} replace />
-            <Icon type="database" />
-            资源
-          </Menu.Item>
           <Menu.Item key="sponsor">
             <Link to={`${match.url}/sponsor`} replace />
             <Icon type="heart" />
@@ -116,7 +116,7 @@ const EdcSite: React.FC<WithRouterComponent<{}, IEdcSiteProps>> = ({
       </Sider>
       <Content className={styles.content}>
         <Switch location={location}>
-          <Route exact={selected} path={`${match.path}`} render={homeRoute} />
+          <Route exact path={`${match.path}`} render={homeRoute} />
           <Route exact path={`${match.path}/intro`} component={IntroPage} />
           <AuthRoute
             location={location}

@@ -82,25 +82,6 @@ export interface IWeeklyState {
   };
 }
 
-export interface ITimeline {
-  id: number;
-  title: string;
-  alias: string;
-  description: string;
-  originalUri: string;
-  createdAt: string;
-  createdBy: number;
-  updatedAt: string;
-  updatedBy: number;
-  link?: string;
-}
-
-export interface ITimelinesState {
-  fetching: boolean;
-  error?: Error | null;
-  items: ITimeline[];
-}
-
 export interface ITeam {
   id: number;
   contestId: number;
@@ -108,8 +89,8 @@ export interface ITeam {
   description: string;
   leader: number;
   members: number[];
-  leaderUsername?: string;
-  membersUsername?: string[];
+  leaderInfo?: IUser;
+  membersInfo?: IUser[];
   inviteCode?: string;
   createdAt?: string;
   createdBy?: number;
@@ -123,11 +104,11 @@ export interface ITeamsState {
   error?: Error | null;
   items: ITeam[];
   selfTeam: ITeam;
+  totalTeams: number;
 }
 
 export interface IAppState {
   auth: IAuthState;
   weekly: IWeeklyState;
-  timelines: ITimelinesState;
   teams: ITeamsState;
 }

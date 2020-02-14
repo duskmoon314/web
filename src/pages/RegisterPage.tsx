@@ -62,9 +62,10 @@ interface IRegisterFormProps extends FormComponentProps {
   submit: (username: string, password: string) => void;
 }
 
-const RegisterForm: React.FC<
-  WithRouterComponent<{}, IRegisterFormProps>
-> = props => {
+const RegisterForm: React.FC<WithRouterComponent<
+  {},
+  IRegisterFormProps
+>> = props => {
   const { getFieldDecorator } = props.form;
 
   const [confirmDirty, setConfirmDirty] = useState(false);
@@ -161,7 +162,7 @@ const RegisterForm: React.FC<
           message.success("注册成功");
           props.history.replace("/login");
         } catch {
-          message.error("注册失败");
+          message.error("用户已存在");
         }
       } else {
         message.error("请完整填写所有信息");
@@ -270,12 +271,12 @@ const RegisterForm: React.FC<
       <FormItem label="院系">
         {getFieldDecorator("department", {
           rules: [{ required: true, message: "请输入院系" }]
-        })(<Input />)}
+        })(<Input placeholder="简写，如：电子系" />)}
       </FormItem>
       <FormItem label="班级">
         {getFieldDecorator("class", {
           rules: [{ required: true, message: "请输入班级" }]
-        })(<Input />)}
+        })(<Input placeholder="如：无61" />)}
       </FormItem>
       <FormItem {...tailFormItemLayout} style={{ textAlign: "center" }}>
         <Button type="primary" htmlType="submit">
@@ -286,6 +287,6 @@ const RegisterForm: React.FC<
   );
 };
 
-const WrappedRegisterForm = withRouter(Form.create<IRegisterFormProps>()(
-  RegisterForm
-) as any);
+const WrappedRegisterForm = withRouter(
+  Form.create<IRegisterFormProps>()(RegisterForm) as any
+);

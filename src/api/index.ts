@@ -1,7 +1,12 @@
 import axios from "axios";
 import { getArticleFeeds } from "./articles";
-import { getTimelineFeeds } from "./timelines";
-import { login, register, updateUser, getUsername } from "./users";
+import {
+  login,
+  register,
+  updateUser,
+  getUserInfo,
+  getUserInfos
+} from "./users";
 import {
   getTeams,
   createTeam,
@@ -9,7 +14,8 @@ import {
   deleteTeam,
   quitTeam,
   addTeamMember,
-  getContestId
+  getContestId,
+  getTeamNum
 } from "./teams";
 
 axios.defaults.baseURL =
@@ -23,7 +29,8 @@ export default {
   register,
   updateUser,
   getArticleFeeds,
-  getUsername,
+  getUserInfo,
+  getUserInfos,
   getTeams,
   createTeam,
   updateTeam,
@@ -31,5 +38,5 @@ export default {
   quitTeam,
   addTeamMember,
   getContestId,
-  getTimelineFeeds
+  getTeamNum
 };

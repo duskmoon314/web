@@ -19,7 +19,6 @@ import api from "../api";
 import styles from "./EnrollPage.module.css";
 
 interface IEnrollPageStateProps {
-  token?: string;
   fetching: boolean;
   contestId?: number;
   error?: Error | null;
@@ -35,10 +34,11 @@ interface IEnrollPageDispatchProps {
 
 type IEnrollPageProps = IEnrollPageStateProps & IEnrollPageDispatchProps;
 
-const EnrollPage: React.FC<
-  WithRouterComponent<{}, IEnrollPageProps>
-> = props => {
-  const { token, error, fetching, contestId, selfTeam, getSelfTeam } = props;
+const EnrollPage: React.FC<WithRouterComponent<
+  {},
+  IEnrollPageProps
+>> = props => {
+  const { error, fetching, contestId, selfTeam, getSelfTeam } = props;
 
   useEffect(() => {
     getSelfTeam("电设", 2019);
@@ -61,11 +61,7 @@ const EnrollPage: React.FC<
     return (
       <div className={styles.root}>
         <Card className={styles.card}>
-          <WrappedEnrollForm
-            token={token || ""}
-            contestId={contestId}
-            props={props}
-          />
+          <WrappedEnrollForm contestId={contestId} props={props} />
         </Card>
       </div>
     );
@@ -74,8 +70,8 @@ const EnrollPage: React.FC<
       name,
       description,
       inviteCode,
-      leaderUsername,
-      membersUsername = []
+      leaderInfo,
+      membersInfo = []
     } = selfTeam;
 
     return (
@@ -84,9 +80,12 @@ const EnrollPage: React.FC<
           <Descriptions title="队伍信息" column={4}>
             <Descriptions.Item label="队名">{name}</Descriptions.Item>
             <Descriptions.Item label="邀请码">{inviteCode}</Descriptions.Item>
-            <Descriptions.Item label="队长">{leaderUsername}</Descriptions.Item>
+            <Descriptions.Item label="队长">
+              {leaderInfo && leaderInfo.username}
+            </Descriptions.Item>
             <Descriptions.Item label="队员">
-              {membersUsername!.join(", ")}
+              {membersInfo &&
+                membersInfo.map(member => member.username).join(", ")}
             </Descriptions.Item>
             <Descriptions.Item label="队伍简介">
               {description}
@@ -100,7 +99,6 @@ const EnrollPage: React.FC<
 
 function mapStateToProps(state: IAppState): IEnrollPageStateProps {
   return {
-    token: state.auth.token,
     fetching: state.teams.fetching,
     contestId: state.teams.contestId,
     error: state.teams.error,
@@ -116,24 +114,15 @@ const mapDispatchToProps: IEnrollPageDispatchProps = {
 };
 
 export default withRouter(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(EnrollPage)
+  connect(mapStateToProps, mapDispatchToProps)(EnrollPage)
 );
 
 interface IEnrollFormProps extends FormComponentProps {
   props: WithRouterComponent<{}, IEnrollPageProps>;
-  token: string;
   contestId?: number;
 }
 
-const EnrollForm: React.FC<IEnrollFormProps> = ({
-  form,
-  props,
-  token,
-  contestId
-}) => {
+const EnrollForm: React.FC<IEnrollFormProps> = ({ form, props, contestId }) => {
   const { getFieldDecorator } = form;
 
   const handleSubmit = () => {
@@ -147,8 +136,7 @@ const EnrollForm: React.FC<IEnrollFormProps> = ({
           const inviteCode = await api.createTeam(
             values.name,
             values.description,
-            contestId!,
-            token
+            contestId!
           );
           Modal.success({
             title: "队伍创建成功",

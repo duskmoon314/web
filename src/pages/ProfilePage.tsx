@@ -45,10 +45,7 @@ const mapDispatchToProps: IProfilePageDispatchProps = {
   updateUserAction
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ProfilePage);
+export default connect(mapStateToProps, mapDispatchToProps)(ProfilePage);
 
 const FormItem = Form.Item;
 const AutoCompleteOption = AutoComplete.Option;
@@ -81,9 +78,10 @@ interface IProfileFormProps extends FormComponentProps {
   update: typeof updateUserAction;
 }
 
-const ProfileForm: React.FC<
-  WithRouterComponent<{}, IProfileFormProps>
-> = props => {
+const ProfileForm: React.FC<WithRouterComponent<
+  {},
+  IProfileFormProps
+>> = props => {
   const { getFieldDecorator } = props.form;
   const { user, update } = props;
 
@@ -163,13 +161,17 @@ const ProfileForm: React.FC<
           await api.updateUser(user.id, {
             password: values.password,
             email: values.email,
-            phone: parseFloat(values.phone)
+            phone: parseFloat(values.phone),
+            department: values.department,
+            class: values.class
           });
 
           update(user.id, {
             password: values.password,
             email: values.email,
-            phone: parseFloat(values.phone)
+            phone: parseFloat(values.phone),
+            department: values.department,
+            class: values.class
           } as IUser);
 
           message.success("更新成功");
@@ -253,10 +255,16 @@ const ProfileForm: React.FC<
         <Input readOnly defaultValue={user.name} />
       </FormItem>
       <FormItem label="院系">
-        <Input readOnly defaultValue={user.department} />
+        {getFieldDecorator("department", {
+          initialValue: user.department,
+          rules: [{ required: true, message: "请输入院系" }]
+        })(<Input placeholder="简写，如：电子系" />)}
       </FormItem>
       <FormItem label="班级">
-        <Input readOnly defaultValue={user.class} />
+        {getFieldDecorator("class", {
+          initialValue: user.class,
+          rules: [{ required: true, message: "请输入班级" }]
+        })(<Input placeholder="如：无61" />)}
       </FormItem>
       <FormItem {...tailFormItemLayout} style={{ textAlign: "center" }}>
         <Button type="primary" htmlType="submit">
